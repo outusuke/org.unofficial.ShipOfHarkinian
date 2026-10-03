@@ -12,6 +12,7 @@ finish-args:
   - --socket=pulseaudio
   - --device=all
   - --filesystem=xdg-download:ro
+  - --env=APPIMAGE_EXTRACT_AND_RUN=1
 
 modules:
   - name: soh
@@ -20,12 +21,23 @@ modules:
       - mkdir -p /app/lib/soh
       - |
         cd src
-        APPIMAGE=$(find . -iname '*.appimage' | head -n 1)
+        echo "=== zip contents ==="
+        ls -laR .
+        APPIMAGE=""
+        for f in ./* ./*/*; do
+          [ -f "$f" ] || continue
+          if dd if="$f" bs=1 skip=8 count=2 2>/dev/null | grep -aq '^AI'; then
+            APPIMAGE="$f"
+            break
+          fi
+        done
         if [ -n "$APPIMAGE" ]; then
+          echo "=== found AppImage: $APPIMAGE ==="
           chmod +x "$APPIMAGE"
           "$APPIMAGE" --appimage-extract
           cp -a squashfs-root/. /app/lib/soh/
         else
+          echo "=== no AppImage found, copying zip contents as-is ==="
           cp -a . /app/lib/soh/
         fi
       - find /app/lib/soh -maxdepth 4 -type f \( -name AppRun -o -name soh.elf \) -exec chmod +x {} +
@@ -40,12 +52,20 @@ modules:
       - type: script
         dest-filename: soh-launch
         commands:
-          - D="${XDG_DATA_HOME:-$HOME/.local/share}/soh-bin"
-          - mkdir -p "$D"
+          - export APPIMAGE_EXTRACT_AND_RUN=1
+          - unset APPIMAGE APPDIR OWD ARGV0
+          - DATA="${XDG_DATA_HOME:-$HOME/.local/share}"
+          - D="$DATA/soh-bin"
+          - mkdir -p "$D" "$DATA/soh"
           - cp -a /app/lib/soh/. "$D/"
+          - chmod -R u+w "$D"
           - OTR=$(find "$D" -name soh.otr | head -n 1)
-          - if [ -n "$OTR" ]; then export SHIP_BIN_DIR="$(dirname "$OTR")"; cd "$SHIP_BIN_DIR"; fi
-          - if [ -x "$D/AppRun" ]; then exec "$D/AppRun" "$@"; fi
-          - exec "$(find "$D" -name soh.elf | head -n 1)" "$@"
+          - B=$(dirname "${OTR:-$D/x}")
+          - export SHIP_BIN_DIR="$B"
+          - export SHIP_HOME="$DATA/soh"
+          - cd "$B"
+          - EXE=$(find "$D" -type f -name soh.elf | head -n 1)
+          - if [ -n "$EXE" ]; then exec "$EXE" "$@"; fi
+          - exec "$D/AppRun" "$@"
       - type: file
         path: org.unofficial.ShipOfHarkinian.desktop
