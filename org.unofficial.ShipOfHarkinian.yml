@@ -40,9 +40,12 @@ modules:
       - type: script
         dest-filename: soh-launch
         commands:
-          - OTR=$(find /app/lib/soh -name soh.otr | head -n 1)
+          - D="${XDG_DATA_HOME:-$HOME/.local/share}/soh-bin"
+          - mkdir -p "$D"
+          - cp -a /app/lib/soh/. "$D/"
+          - OTR=$(find "$D" -name soh.otr | head -n 1)
           - if [ -n "$OTR" ]; then export SHIP_BIN_DIR="$(dirname "$OTR")"; cd "$SHIP_BIN_DIR"; fi
-          - if [ -x /app/lib/soh/AppRun ]; then exec /app/lib/soh/AppRun "$@"; fi
-          - exec "$(find /app/lib/soh -name soh.elf | head -n 1)" "$@"
+          - if [ -x "$D/AppRun" ]; then exec "$D/AppRun" "$@"; fi
+          - exec "$(find "$D" -name soh.elf | head -n 1)" "$@"
       - type: file
         path: org.unofficial.ShipOfHarkinian.desktop
