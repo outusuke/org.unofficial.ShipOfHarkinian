@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Ship of Harkinian
+Comment=Unofficial Flatpak of Ship of Harkinian (Ocarina of Time PC port)
+Exec=soh-launch
+Categories=Game;
