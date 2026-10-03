@@ -1,0 +1,48 @@
+app-id: org.unofficial.ShipOfHarkinian
+runtime: org.freedesktop.Platform
+runtime-version: '25.08'
+sdk: org.freedesktop.Sdk
+command: soh-launch
+
+finish-args:
+  - --share=ipc
+  - --share=network
+  - --socket=x11
+  - --socket=wayland
+  - --socket=pulseaudio
+  - --device=all
+  - --filesystem=xdg-download:ro
+
+modules:
+  - name: soh
+    buildsystem: simple
+    build-commands:
+      - mkdir -p /app/lib/soh
+      - |
+        cd src
+        APPIMAGE=$(find . -iname '*.appimage' | head -n 1)
+        if [ -n "$APPIMAGE" ]; then
+          chmod +x "$APPIMAGE"
+          "$APPIMAGE" --appimage-extract
+          cp -a squashfs-root/. /app/lib/soh/
+        else
+          cp -a . /app/lib/soh/
+        fi
+      - find /app/lib/soh -maxdepth 4 -type f \( -name AppRun -o -name soh.elf \) -exec chmod +x {} +
+      - install -Dm755 soh-launch /app/bin/soh-launch
+      - install -Dm644 org.unofficial.ShipOfHarkinian.desktop -t /app/share/applications
+    sources:
+      - type: archive
+        url: https://github.com/HarbourMasters/Shipwright/releases/download/9.2.3/SoH-Ackbar-Delta-Linux.zip
+        sha256: f81cde8052142d6abbbaaffa70699d6748e4cde3f158be8f268c3aab338ee315
+        strip-components: 0
+        dest: src
+      - type: script
+        dest-filename: soh-launch
+        commands:
+          - OTR=$(find /app/lib/soh -name soh.otr | head -n 1)
+          - if [ -n "$OTR" ]; then export SHIP_BIN_DIR="$(dirname "$OTR")"; cd "$SHIP_BIN_DIR"; fi
+          - if [ -x /app/lib/soh/AppRun ]; then exec /app/lib/soh/AppRun "$@"; fi
+          - exec "$(find /app/lib/soh -name soh.elf | head -n 1)" "$@"
+      - type: file
+        path: org.unofficial.ShipOfHarkinian.desktop
