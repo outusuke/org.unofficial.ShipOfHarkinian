@@ -21,33 +21,17 @@ modules:
       - mkdir -p /app/lib/soh
       - |
         cd src
-        echo "=== zip contents ==="
-        ls -laR .
-        APPIMAGE=""
-        for f in ./* ./*/*; do
-          [ -f "$f" ] || continue
-          if dd if="$f" bs=1 skip=8 count=2 2>/dev/null | grep -aq '^AI'; then
-            APPIMAGE="$f"
-            break
-          fi
-        done
-        if [ -n "$APPIMAGE" ]; then
-          echo "=== found AppImage: $APPIMAGE ==="
-          chmod +x "$APPIMAGE"
-          "$APPIMAGE" --appimage-extract
-          cp -a squashfs-root/. /app/lib/soh/
-        else
-          echo "=== no AppImage found, copying zip contents as-is ==="
-          cp -a . /app/lib/soh/
-        fi
+        chmod +x soh.appimage
+        ./soh.appimage --appimage-extract
+        cp -a squashfs-root/. /app/lib/soh/
       - find /app/lib/soh -maxdepth 4 -type f \( -name AppRun -o -name soh.elf \) -exec chmod +x {} +
       - install -Dm755 soh-launch /app/bin/soh-launch
       - install -Dm644 org.unofficial.ShipOfHarkinian.desktop -t /app/share/applications
     sources:
-      - type: archive
-        url: https://github.com/HarbourMasters/Shipwright/releases/download/9.2.3/SoH-Ackbar-Delta-Linux.zip
-        sha256: f81cde8052142d6abbbaaffa70699d6748e4cde3f158be8f268c3aab338ee315
-        strip-components: 0
+      - type: file
+        url: https://github.com/HarbourMasters/Shipwright/releases/download/9.3.0/SoH-Dewey-Alpha.appimage
+        sha256: 8507bb70413e130e452ebaf5f156bfd78013ee0144364b7968680e8cf064a0fa
+        dest-filename: soh.appimage
         dest: src
       - type: script
         dest-filename: soh-launch
@@ -59,8 +43,8 @@ modules:
           - mkdir -p "$D" "$DATA/soh"
           - cp -a /app/lib/soh/. "$D/"
           - chmod -R u+w "$D"
-          - OTR=$(find "$D" -name soh.otr | head -n 1)
-          - B=$(dirname "${OTR:-$D/x}")
+          - O2R=$(find "$D" \( -name soh.o2r -o -name soh.otr \) | head -n 1)
+          - B=$(dirname "${O2R:-$D/x}")
           - export SHIP_BIN_DIR="$B"
           - export SHIP_HOME="$DATA/soh"
           - cd "$B"
