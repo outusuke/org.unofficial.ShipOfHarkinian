@@ -29,8 +29,8 @@ modules:
       - install -Dm644 org.unofficial.ShipOfHarkinian.desktop -t /app/share/applications
     sources:
       - type: file
-        url: https://github.com/HarbourMasters/Shipwright/releases/download/9.3.0/SoH-Dewey-Alpha.appimage
-        sha256: 8507bb70413e130e452ebaf5f156bfd78013ee0144364b7968680e8cf064a0fa
+        url: https://github.com/HarbourMasters/Shipwright/releases/download/9.3.1/SoH-Dewey-Bravo.appimage
+        sha256: e4bb775c9a0c3629ebac57e4b6ccba6d0b621d71ab201e9105aceef9141ad1f4
         dest-filename: soh.appimage
         dest: src
       - type: script
